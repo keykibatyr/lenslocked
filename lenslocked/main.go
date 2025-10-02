@@ -2,72 +2,70 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
+
+type Info struct {
+	Name string
+}
+
+func executeTemplate(w http.ResponseWriter, path string, info *Info) { // I could add intrafce instead of *Info. Probably will do that
+	tpl, err := template.ParseFiles(path)
+	if err != nil {
+		log.Printf("parsing template: %v", err)
+		http.Error(
+			w,
+			"Pasring the templatewas unsuccessful",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	err = tpl.Execute(w, info)
+	if err != nil {
+		log.Printf("executing: %v", err)
+		http.Error(
+			w,
+			"Failed at executing the page",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1>Welcome to my Website!</h1>")
+	executeTemplate(w, "templates/home.gohtml", nil)
+
 }
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1>Contact Page</h1><p>To get in touch email me at <a href= \"mailto:keykibatyr@gmail.com\">keykibatyr@gmail.com</a> ")
+	user_id := chi.URLParam(r, "userID")
+
+	data := &Info{
+		Name: user_id,
+	}
+
+	executeTemplate(w, "templates/contact.gohtml", data)
 }
-
-// type Router struct{}
-
-// func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-// 	switch r.URL.Path {
-// 	case "/":
-// 		homeHandler(w, r)
-// 	case "/contact":
-// 		contactHandler(w, r)
-// 	case "/faq":
-// 		faqHandler(w, r)
-// 	default:
-// 		w.WriteHeader(404)
-// 		fmt.Fprintln(w, "page not found")
-// 	}
-// }
-
-// func pathHandler(w http.ResponseWriter, r *http.Request) {
-// 	switch r.URL.Path {
-// 	case "/":
-// 		homeHandler(w, r)
-// 	case "/contact":
-// 		contactHandler(w, r)
-// 	case "/faq":
-// 		faqHandler(w, r)
-// 	default:
-// 		w.WriteHeader(404)
-// 		fmt.Fprintln(w, "page not found")
-// 	}
-// }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1>FAQ Page</h1>")
-	fmt.Fprint(w, `<h2><pre>
-Q: Is there a free version?
-A: Yes! We offer a free trial for 30 days on any paid plans.
-
-Q: What are your support hours?
-A: We have support staff answering emails 24/7, though response times may be a bit slower on weekends.
-
-Q: How do I contact support?
-A: Email us – <a href="mailto:keykibatyr@gmail.com">support@lenslocked.com</a>
-</pre></h2>`)
-
+	executeTemplate(w, "templates/faq.gohtml", nil)
 }
 
 func main() {
 	// var router Router
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	r.Get("/", homeHandler)
-	r.Get("/contact", contactHandler)
+	r.Get("/contact/{userID}", contactHandler)
 	r.Get("/faq", faqHandler)
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(
