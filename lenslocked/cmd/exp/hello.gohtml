@@ -1,5 +1,13 @@
 <h1>Hello, {{.Name}}</h1>
 <h2>Ur Bio is {{.Bio}}</h2>
+<h2>Ur Address is {{.Address.Street}}, House number is {{.Address.HouseNum}}</h2>
+
+
+{{if gt .Age 18}}
+    <p>Welcome, {{.Name}}!</p>
+{{else}}
+    <p>Sorry u cannot enter; must be 18+</p>
+{{end}}
 
 <!-- <script>
     const user = {

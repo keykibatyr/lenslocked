@@ -2,46 +2,38 @@ package main
 
 import (
 	"fmt"
-	"html/template"
+	// "html/template"
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/keykibatyr/lenslocked/views"
 )
 
 type Info struct {
 	Name string
 }
 
-func executeTemplate(w http.ResponseWriter, path string, info *Info) { // I could add intrafce instead of *Info. Probably will do that
-	tpl, err := template.ParseFiles(path)
+func executeTemplate(w http.ResponseWriter, path string, data interface{}) { // I could add interafce instead of *Info. Probably will do that
+	t, err := views.Parse(path, data)
 	if err != nil {
-		log.Printf("parsing template: %v", err)
+		log.Printf("parsing template: %v", path)
 		http.Error(
 			w,
-			"Pasring the templatewas unsuccessful",
-			http.StatusInternalServerError,
+			"Failed at parsing the template",
+			404,
 		)
 		return
 	}
 
-	err = tpl.Execute(w, info)
-	if err != nil {
-		log.Printf("executing: %v", err)
-		http.Error(
-			w,
-			"Failed at executing the page",
-			http.StatusInternalServerError,
-		)
-		return
-	}
+	t.ExecuteTemp(w)
 
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	executeTemplate(w, "templates/home.gohtml", nil)
+	executeTemplate(w, "templates/home.gohtml",nil)
 
 }
 
@@ -53,6 +45,7 @@ func contactHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	executeTemplate(w, "templates/contact.gohtml", data)
+	
 }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
