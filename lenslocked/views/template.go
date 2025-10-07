@@ -26,15 +26,15 @@ func (t *Template) ExecuteTemp(w http.ResponseWriter) { // I could add interafce
 
 }
 
-func Parse(filepath string, data interface{}) (Template, error){
+func Parse(filepath string) (Template, error){
 	tpl, err := template.ParseFiles(filepath)
 	if err != nil {
 		log.Printf("parsing template: %v", err)
-		return Template{}, fmt.Errorf("could not parse the page")
+		return Template{}, fmt.Errorf("could not parse the page %v", err)
 	}
 	return Template{
 		htmlTpl: tpl,
-		Data: data,
+		Data: nil,
 	}, nil
 }
 
