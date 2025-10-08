@@ -1,15 +1,24 @@
 package views
 
 import (
+	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
-	"fmt"
 )
 
 type Template struct {
 	htmlTpl *template.Template
-	Data interface{}
+	Data    interface{}
+}
+
+func Must(t Template, err error) Template {
+	if err != nil {
+		panic(err)
+	}
+
+	return t
 }
 
 func (t *Template) ExecuteTemp(w http.ResponseWriter) { // I could add interafce instead of *Info. Probably will do that
@@ -26,7 +35,19 @@ func (t *Template) ExecuteTemp(w http.ResponseWriter) { // I could add interafce
 
 }
 
-func Parse(filepath string) (Template, error){
+func ParseFileSys(fs fs.FS, patterns ...string) (Template, error) {
+	tpl, err := template.ParseFS(fs, patterns...)
+	if err != nil {
+		log.Printf("parsing template: %v", err)
+		return Template{}, fmt.Errorf("could not parse the page %v", err)
+	}
+	return Template{
+		htmlTpl: tpl,
+		Data:    nil,
+	}, nil
+}
+
+func Parse(filepath string) (Template, error) {
 	tpl, err := template.ParseFiles(filepath)
 	if err != nil {
 		log.Printf("parsing template: %v", err)
@@ -34,7 +55,6 @@ func Parse(filepath string) (Template, error){
 	}
 	return Template{
 		htmlTpl: tpl,
-		Data: nil,
+		Data:    nil,
 	}, nil
 }
-
