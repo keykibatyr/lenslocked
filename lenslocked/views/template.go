@@ -47,14 +47,14 @@ func ParseFileSys(fs fs.FS, patterns ...string) (Template, error) {
 	}, nil
 }
 
-func Parse(filepath string) (Template, error) {
-	tpl, err := template.ParseFiles(filepath)
-	if err != nil {
-		log.Printf("parsing template: %v", err)
-		return Template{}, fmt.Errorf("could not parse the page %v", err)
-	}
-	return Template{
-		htmlTpl: tpl,
-		Data:    nil,
-	}, nil
-}
+// func Parse(filepath string) (Template, error) {
+// 	tpl, err := template.ParseFiles(filepath)
+// 	if err != nil {
+// 		log.Printf("parsing template: %v", err)
+// 		return Template{}, fmt.Errorf("could not parse the page %v", err)
+// 	}
+// 	return Template{
+// 		htmlTpl: tpl,
+// 		Data:    nil,
+// 	}, nil
+// }

@@ -20,17 +20,21 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
-	tpl := views.Must(views.ParseFileSys(templates.FS, "home.gohtml"))
+	tpl := views.Must(views.ParseFileSys(
+		templates.FS, "home.gohtml", "tailwind.gohtml"))
 
 	router.Get("/", controllers.StaticHandler(tpl, nil))
 
-	contacttpl := views.Must(views.ParseFileSys(templates.FS, "contact.gohtml"))
+	contacttpl := views.Must(views.ParseFileSys(
+		templates.FS, "contact.gohtml", "tailwind.gohtml"))
 
-	router.Get("/contact/{userID}", controllers.StaticHandler(contacttpl, func(r *http.Request) interface{} {
+	router.Get("/contact/{userID}", controllers.StaticHandler(
+		contacttpl, func(r *http.Request) interface{} {
 		return &Info{Name: chi.URLParam(r, "userID")}
 	}))
 
-	faqtpl := views.Must(views.ParseFileSys(templates.FS, "faq.gohtml"))
+	faqtpl := views.Must(views.ParseFileSys(
+		templates.FS,"faq.gohtml", "tailwind.gohtml"))
 
 	router.Get("/faq", controllers.FAQ(faqtpl))
 
