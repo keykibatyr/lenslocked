@@ -7,12 +7,9 @@ import (
 	"github.com/keykibatyr/lenslocked/views"
 )
 
-func StaticHandler(tpl views.Template, getData func(r *http.Request) interface{}) http.HandlerFunc {
+func StaticHandler(tpl views.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if getData != nil {
-            tpl.Data = getData(r)
-        }
-		tpl.ExecuteTemp(w)
+		tpl.ExecuteTemp(w, nil)
 	}
 }
 
@@ -37,7 +34,6 @@ func FAQ(tpl views.Template) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request){
-        tpl.Data = questions
-		tpl.ExecuteTemp(w)
+		tpl.ExecuteTemp(w, questions)
 	}
 }

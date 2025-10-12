@@ -23,15 +23,12 @@ func main() {
 	tpl := views.Must(views.ParseFileSys(
 		templates.FS, "home.gohtml", "tailwind.gohtml"))
 
-	router.Get("/", controllers.StaticHandler(tpl, nil))
+	router.Get("/", controllers.StaticHandler(tpl))
 
 	contacttpl := views.Must(views.ParseFileSys(
 		templates.FS, "contact.gohtml", "tailwind.gohtml"))
 
-	router.Get("/contact/{userID}", controllers.StaticHandler(
-		contacttpl, func(r *http.Request) interface{} {
-		return &Info{Name: chi.URLParam(r, "userID")}
-	}))
+	router.Get("/contact", controllers.StaticHandler(contacttpl))
 
 	faqtpl := views.Must(views.ParseFileSys(
 		templates.FS,"faq.gohtml", "tailwind.gohtml"))
