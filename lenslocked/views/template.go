@@ -21,7 +21,7 @@ func Must(t Template, err error) Template {
 	return t
 }
 
-func (t *Template) ExecuteTemp(w http.ResponseWriter) { // I could add interafce instead of *Info. Probably will do that
+func (t Template) ExecuteTemp(w http.ResponseWriter) { // I could add interafce instead of *Info. Probably will do that
 	err := t.htmlTpl.Execute(w, t.Data)
 	if err != nil {
 		log.Printf("executing: %v", err)
