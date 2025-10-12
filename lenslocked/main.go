@@ -37,11 +37,13 @@ func main() {
 		templates.FS,"faq.gohtml", "tailwind.gohtml"))
 
 	router.Get("/faq", controllers.FAQ(faqtpl))
+	
+	usersC := controllers.Users{}
 
-	signUp := views.Must(views.ParseFileSys(
+	usersC.Templates.New = views.Must(views.ParseFileSys(
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
 
-	router.Get("/signUp", controllers.StaticHandler(signUp, nil))
+	router.Get("/signUp", usersC.New)
 
 	fmt.Println("Listening to port :7000...")
 	http.ListenAndServe(":7000", router)
