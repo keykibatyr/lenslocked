@@ -44,6 +44,7 @@ func main() {
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
 
 	router.Get("/signUp", usersC.New)
+	router.Post("/users", usersC.Create)
 
 	fmt.Println("Listening to port :7000...")
 	http.ListenAndServe(":7000", router)
