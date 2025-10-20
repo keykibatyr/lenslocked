@@ -1,10 +1,11 @@
 package main
 
 import (
-	"database/sql"
+	// "database/sql"
 	"fmt"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/keykibatyr/lenslocked/models"
 )
 
 type PostgresConfig struct{
@@ -22,48 +23,63 @@ func (cfg PostgresConfig) String() string {
 }
 
 func main() {
-	cfg := PostgresConfig{
-		Host: "localhost",
-		Port: "5432",
-		User: "baloo",
-		Password: "Alisher2005",
-		Database: "lenslocked",
-		SSLMode: "disable",
-	}
-
-	db, err := sql.Open("pgx", cfg.String())
-
+	db, err := models.Open(models.DefaultConfig())
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Connected!")
 	defer db.Close()
 
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS users(
-	 id SERIAL PRIMARY KEY,
-	 name TEXT,
-	 email TEXT UNIQUE NOT NULL
-	 );
-
-	CREATE TABLE IF NOT EXISTS orders(
-	id SERIAL PRIMARY KEY,
-	user_id INT NOT NULL,
-	amount INT,
-	description TEXT);
-	`)
-
+	us := models.UserService{
+		DB: db,
+	}
+	user, err := us.Create("keykibatyr@gmail.com", "Alisher2005")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Print(user)
+	// cfg := PostgresConfig{
+	// 	Host: "localhost",
+	// 	Port: "5432",
+	// 	User: "baloo",
+	// 	Password: "Alisher2005",
+	// 	Database: "lenslocked",
+	// 	SSLMode: "disable",
+	// }
 
-	fmt.Println("Tables are created!")
+	// db, err := sql.Open("pgx", cfg.String())
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// err = db.Ping()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Connected!")
+	// defer db.Close()
+
+	// _, err = db.Exec(`
+	// CREATE TABLE IF NOT EXISTS users(
+	//  id SERIAL PRIMARY KEY,
+	//  name TEXT,
+	//  email TEXT UNIQUE NOT NULL
+	//  );
+
+	// CREATE TABLE IF NOT EXISTS orders(
+	// id SERIAL PRIMARY KEY,
+	// user_id INT NOT NULL,
+	// amount INT,
+	// description TEXT);
+	// `)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("Tables are created!")
 
 	// name := "Alisher"
 	// email := "keykibatyr@gmail.com"
@@ -115,34 +131,34 @@ func main() {
 
 	// }
 
-	userID := 1
-	type Order struct{
-		Id int
-		UserId int
-		Amount int
-		Description string
-	}
+	// userID := 1
+	// type Order struct{
+	// 	Id int
+	// 	UserId int
+	// 	Amount int
+	// 	Description string
+	// }
 
-	var objects []Order
-	rows , err := db.Query(`
-	SELECT id, amount, description
-	FROM orders Where user_id = $1`, userID)
+	// var objects []Order
+	// rows , err := db.Query(`
+	// SELECT id, amount, description
+	// FROM orders Where user_id = $1`, userID)
 
-	if err != nil{
-		panic(err)
-	}
+	// if err != nil{
+	// 	panic(err)
+	// }
 
-	defer rows.Close()
+	// defer rows.Close()
 	
-	for rows.Next(){
-		var object Order
-		object.UserId = userID
-		err = rows.Scan(&object.Id, &object.Amount, &object.Description)
-		if err != nil{
-			panic(err)
-		}
-		objects = append(objects, object)
-	}
+	// for rows.Next(){
+	// 	var object Order
+	// 	object.UserId = userID
+	// 	err = rows.Scan(&object.Id, &object.Amount, &object.Description)
+	// 	if err != nil{
+	// 		panic(err)
+	// 	}
+	// 	objects = append(objects, object)
+	// }
 
-	fmt.Print(objects)
+	// fmt.Print(objects)
 }

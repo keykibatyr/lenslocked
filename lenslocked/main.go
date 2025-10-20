@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/keykibatyr/lenslocked/controllers"
+	"github.com/keykibatyr/lenslocked/models"
 	"github.com/keykibatyr/lenslocked/templates"
 	"github.com/keykibatyr/lenslocked/views"
 )
@@ -35,7 +36,19 @@ func main() {
 
 	router.Get("/faq", controllers.FAQ(faqtpl))
 	
-	usersC := controllers.Users{}
+	db, err := models.Open(models.DefaultConfig())
+	if err != nil {
+		panic(err)
+	}
+
+	defer db.Close()
+
+	userService := models.UserService{
+		DB: db,
+	}
+	usersC := controllers.Users{
+		UserService: &userService,
+	}
 
 	usersC.Templates.New = views.Must(views.ParseFileSys(
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
