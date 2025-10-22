@@ -42,3 +42,24 @@ func (u *UserService) Create(email, password string) (*User, error) {
 
 	return &NewUser, nil
 }
+
+func (u *UserService) Authenticate(email, password string) (*User, error){
+	email = strings.ToLower(email)	
+	user := User{
+		Email: email,
+	}
+
+	row := u.DB.QueryRow(`SELECT id, password_hash FROM users
+	WHERE email = $1`, email)
+	err := row.Scan(&user.ID, &user.PasswordHash)
+	if err != nil {
+		return nil, fmt.Errorf("could not scan the query2")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return nil, fmt.Errorf("incorrect password")
+	}else {
+		return &user, nil
+	}
+}

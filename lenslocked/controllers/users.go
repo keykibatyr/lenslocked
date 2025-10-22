@@ -13,6 +13,7 @@ import (
 type Users struct {
 	Templates struct {
 		New Template
+		Signin Template
 	}
 
 	UserService *models.UserService
@@ -28,11 +29,22 @@ func (u Users) New(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Email: ", r.FormValue("email"))
-	fmt.Fprintln(w, "Password: ", r.FormValue("password"))
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	
+	user, err := u.UserService.Create(email, password)
+	if err != nil {
+		http.Error(
+			w, 
+			"Could not create the user",
+			http.StatusBadRequest,
+		)
+	}
+
+	fmt.Fprintf(w, "User was created: %v", user)
 	fmt.Fprintln(w, "Terms: ", r.FormValue("checkbox1"))
 
-	err := r.ParseMultipartForm(10 << 20)
+	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Error(
 			w,
@@ -64,4 +76,50 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
+}
+
+func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+
+	u.Templates.Signin.ExecuteTemp(w, data)
+}
+
+func (u Users) ProcessSignin(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+		Password string
+	}
+
+	data.Email = r.FormValue("email")
+	data.Password = r.FormValue("password")
+
+	user, err := u.UserService.Authenticate(data.Email, data.Password)
+	if err != nil {
+		http.Error(
+			w,
+			"Could not authenticate",
+			http.StatusBadRequest,
+		)
+	}
+
+	cookie := http.Cookie{
+		Name: "email",
+		Value: user.Email,
+		Path: "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+	fmt.Fprintf(w, "User successfuly logged in: %v", user)
+}
+
+func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
+	email, err := r.Cookie("email")
+	if err != nil {
+		fmt.Fprint(w, "Cookie doesnt exist")
+		return
+	}
+	fmt.Fprintf(w, "User: %v\n", email.Value)
 }

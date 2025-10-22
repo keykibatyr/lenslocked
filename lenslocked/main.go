@@ -56,6 +56,12 @@ func main() {
 	router.Get("/signUp", usersC.New)
 	router.Post("/users", usersC.Create)
 
+	usersC.Templates.Signin = views.Must(views.ParseFileSys(
+		templates.FS, "signin.gohtml", "tailwind.gohtml"))
+	
+	router.Get("/signIn", usersC.SignIn)
+	router.Post("/signIn", usersC.ProcessSignin)
+
 	fmt.Println("Listening to port :7000...")
 	http.ListenAndServe(":7000", router)
 }
