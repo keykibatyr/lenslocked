@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+    "github.com/gorilla/csrf"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/keykibatyr/lenslocked/controllers"
@@ -32,10 +33,11 @@ func main() {
 	router.Get("/contact", controllers.StaticHandler(contacttpl))
 
 	faqtpl := views.Must(views.ParseFileSys(
-		templates.FS,"faq.gohtml", "tailwind.gohtml"))
+		templates.FS, "faq.gohtml", "tailwind.gohtml"))
 
 	router.Get("/faq", controllers.FAQ(faqtpl))
-	
+
+	// Opening the DB
 	db, err := models.Open(models.DefaultConfig())
 	if err != nil {
 		panic(err)
@@ -53,15 +55,22 @@ func main() {
 	usersC.Templates.New = views.Must(views.ParseFileSys(
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
 
-	router.Get("/signUp", usersC.New)
-	router.Post("/users", usersC.Create)
-
 	usersC.Templates.Signin = views.Must(views.ParseFileSys(
 		templates.FS, "signin.gohtml", "tailwind.gohtml"))
+
+	csrf_key := "qRWLtI8k0q2kZ28nNsG32byMQoqOVmfKOhmLZgv6AD0"
+	csrfMW := csrf.Protect(
+		[]byte(csrf_key), 
+		csrf.Secure(false), 
+		csrf.Path("/"),
+	)
 	
+	router.Get("/signUp", usersC.New)
+	router.Post("/signUp", usersC.Create)
 	router.Get("/signIn", usersC.SignIn)
 	router.Post("/signIn", usersC.ProcessSignin)
+	router.Get("/users/me", usersC.CurrentUser)
 
 	fmt.Println("Listening to port :7000...")
-	http.ListenAndServe(":7000", router)
+	http.ListenAndServe(":7000", csrfMW(router))
 }

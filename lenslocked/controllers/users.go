@@ -1,18 +1,19 @@
 package controllers
 
 import (
-	"fmt"
+	"fmt"	
 	"io"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/gorilla/csrf"
 	"github.com/keykibatyr/lenslocked/models"
 )
 
 type Users struct {
 	Templates struct {
-		New Template
+		New    Template
 		Signin Template
 	}
 
@@ -21,21 +22,21 @@ type Users struct {
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
 	var data struct {
-		Email string
+		Email     string
 	}
 	data.Email = r.FormValue("email")
-
-	u.Templates.New.ExecuteTemp(w, data)
+	u.Templates.New.ExecuteTemp(w, r, data)
+	fmt.Println("CSRF token:", csrf.Token(r))
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-	
+
 	user, err := u.UserService.Create(email, password)
 	if err != nil {
 		http.Error(
-			w, 
+			w,
 			"Could not create the user",
 			http.StatusBadRequest,
 		)
@@ -44,6 +45,7 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "User was created: %v", user)
 	fmt.Fprintln(w, "Terms: ", r.FormValue("checkbox1"))
 
+	// adding the picture
 	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Error(
@@ -84,12 +86,12 @@ func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Email = r.FormValue("email")
 
-	u.Templates.Signin.ExecuteTemp(w, data)
+	u.Templates.Signin.ExecuteTemp(w, r, data)
 }
 
 func (u Users) ProcessSignin(w http.ResponseWriter, r *http.Request) {
 	var data struct {
-		Email string
+		Email    string
 		Password string
 	}
 
@@ -106,9 +108,9 @@ func (u Users) ProcessSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := http.Cookie{
-		Name: "email",
-		Value: user.Email,
-		Path: "/",
+		Name:     "email",
+		Value:    user.Email,
+		Path:     "/",
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
@@ -121,5 +123,5 @@ func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Cookie doesnt exist")
 		return
 	}
-	fmt.Fprintf(w, "User: %v\n", email.Value)
+	fmt.Fprintf(w, "User cookie: %v\n", email.Value)
 }
