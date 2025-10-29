@@ -26,19 +26,21 @@ func Must(t Template, err error) Template {
 
 func (t Template) ExecuteTemp(w http.ResponseWriter, r *http.Request, data interface{}) { // I could add interafce instead of *Info. Probably will do that
 	tpl, err := t.htmlTpl.Clone()
+
 	if err != nil {
 		log.Printf("cloning template: %v", err)
 		http.Error(w, "could not clone thhe template", http.StatusInternalServerError)
 		return
 	}
 
-	tpl = tpl.Funcs(
+	tpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() template.HTML {
 				return csrf.TemplateField(r)
 			},
 		},
 	)
+	
 	var buf bytes.Buffer
 	err = tpl.Execute(&buf, data)
 	if err != nil {
@@ -50,6 +52,7 @@ func (t Template) ExecuteTemp(w http.ResponseWriter, r *http.Request, data inter
 		)
 		return
 	}
+	
 	io.Copy(w, &buf)
 
 }
