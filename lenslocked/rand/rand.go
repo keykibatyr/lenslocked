@@ -19,7 +19,7 @@ func Bytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-func toString(n int) (string, error) {
+func ToString(n int) (string, error) {
 	s, err := Bytes(n)
 	if err != nil {
 		return "", fmt.Errorf("string: %w", err)
@@ -28,13 +28,4 @@ func toString(n int) (string, error) {
 	return base64.URLEncoding.EncodeToString(s), nil
 }
 
-var SessionTokenBytes = 32
 
-func SessionToken() (string, error) {
-	token, err := toString(SessionTokenBytes)
-	if err != nil {
-		return "", fmt.Errorf("sessionToken: %w", err)
-	}
-
-	return token, nil
-}
