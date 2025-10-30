@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"	
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -43,9 +43,6 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	fmt.Fprintf(w, "User was created: %v", user)
-	fmt.Fprintln(w, "Terms: ", r.FormValue("checkbox1"))
-
 	// adding the picture
 	err = r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -78,7 +75,10 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 			log.Print("could not copy the file to the destination")
 		}
 	}
-	fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
+	
+	// fmt.Fprintf(w, "User was created: %v", user)
+	// fmt.Fprintln(w, "Terms: ", r.FormValue("checkbox1"))
+	// fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
 
 	session, err := u.SessionService.Create(user.ID)
 	if err != nil {
