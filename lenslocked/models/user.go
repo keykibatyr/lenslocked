@@ -32,7 +32,7 @@ func (u *UserService) Create(email, password string) (*User, error) {
 
 
 	row := u.DB.QueryRow(`
-	INSERT INTO users (email, password_hash)
+	INSERT INTO users (email, password_hash)	
 	VALUES ($1, $2) RETURNING id`, email, hashedPaswword)
 
 	err = row.Scan(&NewUser.ID)

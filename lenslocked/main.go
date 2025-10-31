@@ -73,6 +73,7 @@ func main() {
 	router.Post("/signUp", usersC.Create)
 	router.Get("/signIn", usersC.SignIn)
 	router.Post("/signIn", usersC.ProcessSignin)
+	router.Post("/signOut", usersC.ProcessSignOut)
 	router.Get("/users/me", usersC.CurrentUser)
 
 	fmt.Println("Listening to port :7000...")

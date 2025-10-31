@@ -19,6 +19,10 @@
       </div>
 
       <div>
+        <form action = "/signOut" method = "post" class = "inline pr-4">
+            {{csrfField}}
+          <button type = "submit">Sign out</button> 
+        </form>
         <a class="pr-8" href = "/signIn"> Sign in </a>
         <a class="pr-4 px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href = "/signUp"> Sign up </a>
       </div>
