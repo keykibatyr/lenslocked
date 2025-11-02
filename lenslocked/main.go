@@ -55,7 +55,7 @@ func main() {
 		UserService: &userService,
 		SessionService: &sessionService,
 	}
-
+ 
 	usersC.Templates.New = views.Must(views.ParseFileSys(
 		templates.FS, "signup.gohtml", "tailwind.gohtml"))
 
