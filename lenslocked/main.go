@@ -38,10 +38,13 @@ func main() {
 	router.Get("/faq", controllers.FAQ(faqtpl))
 
 	// Opening the DB
-	db, err := models.Open(models.DefaultConfig())
+	cfg := models.DefaultConfig()
+	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(cfg.String())
 
 	defer db.Close()
 
