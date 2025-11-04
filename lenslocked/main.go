@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-    "github.com/gorilla/csrf"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/csrf"
 	"github.com/keykibatyr/lenslocked/controllers"
+	"github.com/keykibatyr/lenslocked/migrations"
 	"github.com/keykibatyr/lenslocked/models"
 	"github.com/keykibatyr/lenslocked/templates"
 	"github.com/keykibatyr/lenslocked/views"
@@ -47,6 +48,11 @@ func main() {
 	fmt.Println(cfg.String())
 
 	defer db.Close()
+
+	err = models.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}	
 
 	userService := models.UserService{
 		DB: db,
