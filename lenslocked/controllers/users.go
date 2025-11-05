@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gorilla/csrf"
+	"github.com/keykibatyr/lenslocked/context"
 	"github.com/keykibatyr/lenslocked/models"
 )
 
@@ -17,18 +18,18 @@ type Users struct {
 		Signin Template
 	}
 
-	UserService *models.UserService
+	UserService    *models.UserService
 	SessionService *models.SessionService
 }
 
-	func (u Users) New(w http.ResponseWriter, r *http.Request) {
-		var data struct {
-			Email   string
-		}
-		data.Email = r.FormValue("email")
-		u.Templates.New.ExecuteTemp(w, r, data)
-		fmt.Println("CSRF token:", csrf.Token(r))
+func (u Users) New(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
 	}
+	data.Email = r.FormValue("email")
+	u.Templates.New.ExecuteTemp(w, r, data)
+	fmt.Println("CSRF token:", csrf.Token(r))
+}
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
@@ -75,7 +76,7 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 			log.Print("could not copy the file to the destination")
 		}
 	}
-	
+
 	// fmt.Fprintf(w, "User was created: %v", user)
 	// fmt.Fprintln(w, "Terms: ", r.FormValue("checkbox1"))
 	// fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
@@ -84,7 +85,7 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		http.Redirect(w, r, "/signIn", http.StatusFound)
-		return 
+		return
 	}
 
 	setCookie(w, CookieSession, session.Token)
@@ -120,11 +121,11 @@ func (u Users) ProcessSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, err := u.SessionService.Create(user.ID)
-	
+
 	if err != nil {
 		fmt.Println(err)
 		http.Redirect(w, r, "/signIn", http.StatusFound)
-		return 
+		return
 	}
 
 	setCookie(w, CookieSession, session.Token)
@@ -132,21 +133,30 @@ func (u Users) ProcessSignin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	tokenCookie, err := readCookie(r, CookieSession)
-	if err != nil {
-		fmt.Println(err)
+	ctx := r.Context()
+	user := context.UserValue(ctx)
+	if user == nil {
 		http.Redirect(w, r, "/signIn", http.StatusFound)
 		return
 	}
 
-	user , err := u.SessionService.User(tokenCookie)
-	if err != nil {
-		fmt.Println(err)
-		http.Redirect(w, r, "/signIn", http.StatusFound)
-		return
-	}
-	
 	fmt.Fprintf(w, "Current User is: %v", user)
+
+	// tokenCookie, err := readCookie(r, CookieSession)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Redirect(w, r, "/signIn", http.StatusFound)
+	// 	return
+	// }
+
+	// user, err := u.SessionService.User(tokenCookie)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	http.Redirect(w, r, "/signIn", http.StatusFound)
+	// 	return
+	// }
+
+	// fmt.Fprintf(w, "Current User is: %v", user)
 }
 
 func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
@@ -154,16 +164,42 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		http.Redirect(w, r, "/signIn", http.StatusFound)
-		return		
+		return
 	}
 
-	err = u.SessionService.Delete(token) 
+	err = u.SessionService.Delete(token)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return		
+		return
 	}
 
 	deleteCookie(w, CookieSession)
 	http.Redirect(w, r, "/signIn", http.StatusFound)
+}
+
+
+type UserMiddleware struct {
+	SessionService *models.SessionService
+}
+
+func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		tokenCookie, err := readCookie(r, CookieSession)
+		if err != nil {
+		next.ServeHTTP(w, r)
+		return
+		}
+
+		user, err := umw.SessionService.User(tokenCookie)
+		if err != nil {
+		next.ServeHTTP(w, r)
+		return
+		}
+
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	}) 
 }

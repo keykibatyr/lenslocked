@@ -71,6 +71,10 @@ func main() {
 	usersC.Templates.Signin = views.Must(views.ParseFileSys(
 		templates.FS, "signin.gohtml", "tailwind.gohtml"))
 
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
 	csrf_key := "qRWLtI8k0q2kZ28nNsG32byMQoqOVmfKOhmLZgv6AD0"
 	csrfMW := csrf.Protect(
 		[]byte(csrf_key), 
@@ -86,5 +90,5 @@ func main() {
 	router.Get("/users/me", usersC.CurrentUser)
 
 	fmt.Println("Listening to port :7000...")
-	http.ListenAndServe(":7000", csrfMW(router))
+	http.ListenAndServe(":7000", csrfMW(umw.SetUser(router)))
 }
