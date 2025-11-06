@@ -19,26 +19,7 @@ type Info struct {
 }
 
 func main() {
-	// var router Router
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-
-	tpl := views.Must(views.ParseFileSys(
-		templates.FS, "home.gohtml", "tailwind.gohtml"))
-
-	router.Get("/", controllers.StaticHandler(tpl))
-
-	contacttpl := views.Must(views.ParseFileSys(
-		templates.FS, "contact.gohtml", "tailwind.gohtml"))
-
-	router.Get("/contact", controllers.StaticHandler(contacttpl))
-
-	faqtpl := views.Must(views.ParseFileSys(
-		templates.FS, "faq.gohtml", "tailwind.gohtml"))
-
-	router.Get("/faq", controllers.FAQ(faqtpl))
-
-	// Opening the DB
+		// Opening the DB
 	cfg := models.DefaultConfig()
 	db, err := models.Open(cfg)
 	if err != nil {
@@ -60,16 +41,7 @@ func main() {
 	sessionService := models.SessionService{
 		DB: db,
 	}
-	usersC := controllers.Users{
-		UserService: &userService,
-		SessionService: &sessionService,
-	}
- 
-	usersC.Templates.New = views.Must(views.ParseFileSys(
-		templates.FS, "signup.gohtml", "tailwind.gohtml"))
 
-	usersC.Templates.Signin = views.Must(views.ParseFileSys(
-		templates.FS, "signin.gohtml", "tailwind.gohtml"))
 
 	umw := controllers.UserMiddleware{
 		SessionService: &sessionService,
@@ -82,12 +54,50 @@ func main() {
 		csrf.Path("/"),
 	)
 	
+
+	usersC := controllers.Users{
+		UserService: &userService,
+		SessionService: &sessionService,
+	}
+ 
+	usersC.Templates.New = views.Must(views.ParseFileSys(
+		templates.FS, "signup.gohtml", "tailwind.gohtml"))
+
+	usersC.Templates.Signin = views.Must(views.ParseFileSys(
+		templates.FS, "signin.gohtml", "tailwind.gohtml"))
+
+
+	// var router Router
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Use(csrfMW)
+	router.Use(umw.SetUser)
+
+	tpl := views.Must(views.ParseFileSys(
+		templates.FS, "home.gohtml", "tailwind.gohtml"))
+
+	router.Get("/", controllers.StaticHandler(tpl))
+
+	contacttpl := views.Must(views.ParseFileSys(
+		templates.FS, "contact.gohtml", "tailwind.gohtml"))
+
+	router.Get("/contact", controllers.StaticHandler(contacttpl))
+
+	faqtpl := views.Must(views.ParseFileSys(
+		templates.FS, "faq.gohtml", "tailwind.gohtml"))
+
+	router.Get("/faq", controllers.FAQ(faqtpl))
+
 	router.Get("/signUp", usersC.New)
 	router.Post("/signUp", usersC.Create)
 	router.Get("/signIn", usersC.SignIn)
 	router.Post("/signIn", usersC.ProcessSignin)
 	router.Post("/signOut", usersC.ProcessSignOut)
-	router.Get("/users/me", usersC.CurrentUser)
+	router.Route("/user/me", func(r chi.Router){
+		r.Use(umw.RequireUser)
+		r.Get("/", usersC.CurrentUser)
+	})
+
 
 	fmt.Println("Listening to port :7000...")
 	http.ListenAndServe(":7000", csrfMW(umw.SetUser(router)))
