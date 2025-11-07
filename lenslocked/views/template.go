@@ -10,6 +10,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/csrf"
+	"github.com/keykibatyr/lenslocked/context"
+	"github.com/keykibatyr/lenslocked/models"
 )
 
 type Template struct {
@@ -38,9 +40,12 @@ func (t Template) ExecuteTemp(w http.ResponseWriter, r *http.Request, data inter
 			"csrfField": func() template.HTML {
 				return csrf.TemplateField(r)
 			},
+			"currentUser": func() *models.User {
+				return context.UserValue(r.Context())
+			},
 		},
 	)
-	
+
 	var buf bytes.Buffer
 	err = tpl.Execute(&buf, data)
 	if err != nil {
@@ -52,7 +57,7 @@ func (t Template) ExecuteTemp(w http.ResponseWriter, r *http.Request, data inter
 		)
 		return
 	}
-	
+
 	io.Copy(w, &buf)
 
 }
@@ -63,6 +68,9 @@ func ParseFileSys(fs fs.FS, patterns ...string) (Template, error) {
 		template.FuncMap{
 			"csrfField": func() (template.HTML, error) {
 				return "", fmt.Errorf("could not implement the csrf")
+			},
+			"currentUser": func() (template.HTML, error) {
+				return "", fmt.Errorf("could not implement the currentUser")
 			},
 		},
 	)
