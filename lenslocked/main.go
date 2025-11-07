@@ -93,12 +93,12 @@ func main() {
 	router.Get("/signIn", usersC.SignIn)
 	router.Post("/signIn", usersC.ProcessSignin)
 	router.Post("/signOut", usersC.ProcessSignOut)
-	router.Route("/user/me", func(r chi.Router){
-		r.Use(umw.RequireUser)
-		r.Get("/", usersC.CurrentUser)
+	router.Route("/users/me", func(ro chi.Router){
+		ro.Use(umw.RequireUser)
+		ro.Get("/", usersC.CurrentUser)
 	})
 
 
 	fmt.Println("Listening to port :7000...")
-	http.ListenAndServe(":7000", csrfMW(umw.SetUser(router)))
+	http.ListenAndServe(":7000", router)
 }
