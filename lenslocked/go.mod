@@ -7,13 +7,13 @@ require github.com/go-chi/chi/v5 v5.2.3 // direct
 require (
 	github.com/gorilla/csrf v1.7.1
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/pressly/goose/v3 v3.26.0
 )
 
 require (
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pressly/goose/v3 v3.26.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 )
