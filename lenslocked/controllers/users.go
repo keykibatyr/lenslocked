@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/gorilla/csrf"
@@ -14,12 +15,16 @@ import (
 
 type Users struct {
 	Templates struct {
-		New    Template
-		Signin Template
+		New            Template
+		Signin         Template
+		ForgotPassword Template
+		CheckYourEmail Template 
 	}
 
-	UserService    *models.UserService
-	SessionService *models.SessionService
+	UserService          *models.UserService
+	SessionService       *models.SessionService
+	PasswordResetService *models.PasswordResetService
+	EmailService         *models.EmailService
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -178,34 +183,65 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/signIn", http.StatusFound)
 }
 
+func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.ForgotPassword.ExecuteTemp(w, r, data)
+}
+
+func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	pwReset, err := u.PasswordResetService.Create(data.Email)
+	if err != nil {
+		fmt.Print(err)
+		http.Error(w, "oops something went wrong", http.StatusInternalServerError)
+	}
+
+	vals := url.Values{
+		"token": {pwReset.Token},
+	}
+	resetURL := "https://www.lenslocked.com/reset-pw?" + vals.Encode()
+	err = u.EmailService.ForgotPassword(data.Email, resetURL)
+	if err != nil {
+		fmt.Print(err)
+		http.Error(w, "oops something went wrong", http.StatusInternalServerError)
+	}
+
+	u.Templates.CheckYourEmail.ExecuteTemp(w, r, data)
+}
 
 type UserMiddleware struct {
 	SessionService *models.SessionService
 }
 
 func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenCookie, err := readCookie(r, CookieSession)
 		if err != nil {
-		next.ServeHTTP(w, r)
-		return
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		user, err := umw.SessionService.User(tokenCookie)
 		if err != nil {
-		next.ServeHTTP(w, r)
-		return
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		ctx := r.Context()
 		ctx = context.WithUser(ctx, user)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
-	}) 
+	})
 }
 
 func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := context.UserValue(r.Context())
 		if user == nil {
 			http.Redirect(w, r, "/signIn", http.StatusFound)
