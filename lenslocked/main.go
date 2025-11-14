@@ -93,7 +93,6 @@ func main() {
 
 	emailServcie := models.NewEmailService(cfg.SMTP)
 
-
 	umw := controllers.UserMiddleware{
 		SessionService: sessionService,
 	}
@@ -105,10 +104,10 @@ func main() {
 	)
 
 	usersC := controllers.Users{
-		UserService:    userService,
-		SessionService: sessionService,
+		UserService:          userService,
+		SessionService:       sessionService,
 		PasswordResetService: pwResetService,
-		EmailService: emailServcie,
+		EmailService:         emailServcie,
 	}
 
 	usersC.Templates.New = views.Must(views.ParseFileSys(
@@ -119,6 +118,9 @@ func main() {
 
 	usersC.Templates.ForgotPassword = views.Must(views.ParseFileSys(
 		templates.FS, "forgot-pw.gohtml", "tailwind.gohtml"))
+
+	usersC.Templates.ForgotPassword = views.Must(views.ParseFileSys( 
+		templates.FS, "check-your-email.gohtml", "tailwind.gohtml"))
 
 	// var router Router
 	router := chi.NewRouter()

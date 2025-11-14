@@ -19,6 +19,7 @@ type Users struct {
 		Signin         Template
 		ForgotPassword Template
 		CheckYourEmail Template 
+		ResetPassword   Template
 	}
 
 	UserService          *models.UserService
@@ -188,7 +189,7 @@ func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		Email string
 	}
 	data.Email = r.FormValue("email")
-	u.Templates.ForgotPassword.ExecuteTemp(w, r, data)
+	u.Templates.CheckYourEmail.ExecuteTemp(w, r, data)
 }
 
 func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
@@ -213,6 +214,43 @@ func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.Templates.CheckYourEmail.ExecuteTemp(w, r, data)
+}
+
+func (u Users) ResetPassword(w http.ResponseWriter, r *http.Request){
+	var data struct {
+		Token string
+	}
+
+	data.Token = r.FormValue("token")
+	u.Templates.ResetPassword.ExecuteTemp(w, r, data)
+}
+
+func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request){
+	var data struct {
+		Token string
+		Password string
+	}
+
+	data.Token = r.FormValue("token")
+	data.Password = r.FormValue("password")
+
+	user, err := u.PasswordResetService.Consume(data.Token) 
+	if err != nil {
+		fmt.Print(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	session, err := u.SessionService.Create(user.ID)
+	if err != nil {
+		fmt.Print(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	setCookie(w, CookieSession, session.Token)
+	http.Redirect(w, r, "/user/me", http.StatusFound)
+
 }
 
 type UserMiddleware struct {

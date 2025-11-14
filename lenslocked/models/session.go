@@ -15,7 +15,7 @@ const (
 type Session struct {
 	ID     int
 	UserID int
-	//We dont stroe the raw token in th db, we need it
+	//We dont store the raw token in th db, we need it
 	//to create the user :)
 	Token     string
 	TokenHash string
