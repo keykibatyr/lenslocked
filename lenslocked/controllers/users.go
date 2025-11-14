@@ -241,6 +241,13 @@ func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+	err = u.UserService.UpdatePassword(user.ID, data.Password)
+	if err != nil {
+		fmt.Print(err)
+		http.Error(w, "couls not reset the password", http.StatusInternalServerError)
+		return
+	}
+
 	session, err := u.SessionService.Create(user.ID)
 	if err != nil {
 		fmt.Print(err)
@@ -289,3 +296,4 @@ func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+

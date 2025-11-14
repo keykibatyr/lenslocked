@@ -1,0 +1,40 @@
+{{template "header" .}}
+<div class="py-12 flex justify-center">
+    <div class="px-8 py-8 bg-white rounded shadow">
+        <h1 class="pt-4 pb-8 text-center text-3xl font-bald text-gray-900">
+            Reset your Password
+        </h1>
+        <form action="/signIn" method="post" enctype="multipart/form-data">
+            <div>
+                <label for="password" class="text-sm font-semibold text-gray-800">Password</label>
+                <input name="password" id="password" type="password" placeholder="Password" required class="w-full px-3 py-2 border border-gray-300 
+                placeholder-gray-500 text-gray-800 rounded" />
+            </div>
+            {{if .Token}}
+            <div class = "hidden">
+                <input type = "hidden", id = "token", name = "token" value = {{.Token}} />
+            </div>
+            {{else}}
+                <div class= "py-4">
+                    <label for="token" class="text-sm font-semibold text-gray-800">Token</label>
+                    <input name="token" 
+                    id="token" 
+                    type="text" placeholder="Check your email" 
+                    required class="w-full px-3 py-2 border border-gray-300 
+                placeholder-gray-500 text-gray-800 rounded" />
+                </div>
+            {{end}}
+            <div class="py-4">
+                <button type="submit" class="py-4 px-2 w-full
+                bg-indigo-600 text-white rounded 
+                font-bold text-lg hover:bg-indigo-700">Update the password</button>
+                <div class="flex justify-between w-full py-2">
+                    <p class="text-s text-gray-500">Don't have ab account? <a class="underline" href="/signUp">Sign
+                            Up</a></p>
+                    <p class="text-s text-gray-500"><a class="underline" href="/signIn">Sign In</a></p>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{{template "footer" .}}

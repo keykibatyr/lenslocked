@@ -39,7 +39,7 @@ func (service *PasswordResetService) Create(email string) (*PasswordReset, error
 	if err != nil {
 		return nil, fmt.Errorf("could not create a token")
 	}
-
+	
 	passRes := PasswordReset {
 		Token: token,
 	}

@@ -63,3 +63,19 @@ func (u *UserService) Authenticate(email, password string) (*User, error){
 		return &user, nil
 	}
 }
+
+func (u *UserService) UpdatePassword(userID int, password string) error {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("could not generate password hash")
+	}
+
+	passwordHash := string(hashedBytes)
+
+	_, err = u.DB.Exec(`UPDATE users SET password_hash = $2 WHERE id = $1`, userID, passwordHash)
+	if err != nil {
+		return fmt.Errorf("couls not extract the values from db")
+	}
+
+	return nil
+}
